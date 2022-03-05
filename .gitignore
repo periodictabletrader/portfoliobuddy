@@ -1,0 +1,6 @@
+# created by virtualenv automatically
+prime_db.py
+constants.py
+configs.py
+trades.db
+credentials.py

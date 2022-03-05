@@ -1,0 +1,6 @@
+sqlalchemy
+python-telegram-bot
+pandas
+yfinance
+QuantStats
+jinja2
