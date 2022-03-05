@@ -1,12 +1,12 @@
 import datetime
-from trade_tracker.model import Trade, ClosedTrade, session
-from trade_tracker.controller import get_accounts, get_trade_strs
-from trade_tracker.controller.amount_calculator import eval_expr
-from trade_tracker.controller.portfolio_stats import can_sell_trades, asset_conc
-from trade_tracker.controller.dates import parse_date_str
-from trade_tracker.controller.state import AppState
+from portfoliobuddy.model import Trade, ClosedTrade, session
+from portfoliobuddy.controller import get_accounts, get_trade_strs
+from portfoliobuddy.controller.amount_calculator import eval_expr
+from portfoliobuddy.controller.portfolio_stats import can_sell_trades, asset_conc
+from portfoliobuddy.controller.dates import parse_date_str
+from portfoliobuddy.controller.state import AppState
 from telegram import ReplyKeyboardMarkup, ReplyKeyboardRemove
-from trade_tracker.view.templates.portfolio_stats import ASSET_CONCENTRATION_TEMPLATE
+from portfoliobuddy.view.templates.portfolio_stats import ASSET_CONCENTRATION_TEMPLATE
 from jinja2 import Template
 
 

@@ -1,8 +1,8 @@
-from trade_tracker.model import engine, session, Account, Trade, PriceOverride
+from portfoliobuddy.model import engine, session, Account, Trade, PriceOverride
 import pandas as pd
 import datetime
 import yfinance as yf
-from trade_tracker.configs import DEFAULT_CCY
+from portfoliobuddy.configs import DEFAULT_CCY
 from functools import partial
 
 

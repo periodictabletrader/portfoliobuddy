@@ -1,8 +1,8 @@
 from telegram.ext import CommandHandler, Updater
 
-from trade_tracker.controller.user import user_exists
-from trade_tracker.credentials import access_token
-from trade_tracker.view.portfolio_stats import can_sell, asset_concentration, asset_concentration_liquid
+from portfoliobuddy.controller.user import user_exists
+from portfoliobuddy.credentials import access_token
+from portfoliobuddy.view.portfolio_stats import can_sell, asset_concentration, asset_concentration_liquid
 
 
 def start(update, context):

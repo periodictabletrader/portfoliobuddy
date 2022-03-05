@@ -1,4 +1,4 @@
-from trade_tracker.model import session, Account, Trade
+from portfoliobuddy.model import session, Account, Trade
 
 
 def get_accounts():

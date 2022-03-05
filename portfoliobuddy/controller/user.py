@@ -1,4 +1,4 @@
-from trade_tracker.model import session, User
+from portfoliobuddy.model import session, User
 
 
 def user_exists(user_id):
