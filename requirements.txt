@@ -4,3 +4,4 @@ pandas
 yfinance
 QuantStats
 jinja2
+tabulate
