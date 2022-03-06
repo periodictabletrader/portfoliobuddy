@@ -2,7 +2,7 @@ from telegram.ext import CommandHandler, Updater
 
 from portfoliobuddy.controller.user import user_exists
 from portfoliobuddy.credentials import access_token
-from portfoliobuddy.view.portfolio_stats import can_sell, asset_concentration, asset_concentration_liquid
+from portfoliobuddy.view.portfolio_stats import can_sell, asset_concentration, size_position
 
 
 def start(update, context):
@@ -20,8 +20,8 @@ def register_commands(dispatcher):
     dispatcher.add_handler(last_handler)
     asset_conc = CommandHandler('conc', asset_concentration)
     dispatcher.add_handler(asset_conc)
-    asset_conc_liquid = CommandHandler('conc_liquid', asset_concentration_liquid)
-    dispatcher.add_handler(asset_conc_liquid)
+    size = CommandHandler('size', size_position)
+    dispatcher.add_handler(size)
     return dispatcher
 
 

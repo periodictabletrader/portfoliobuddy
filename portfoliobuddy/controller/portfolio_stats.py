@@ -4,6 +4,7 @@ import datetime
 import yfinance as yf
 from portfoliobuddy.configs import DEFAULT_CCY
 from functools import partial
+from quantstats.stats import volatility
 
 
 def get_trades(tickers=None, liquid_only=None, include_cash=True):
@@ -119,3 +120,21 @@ def asset_conc(tickers=None, liquid_only=None, in_default_ccy=True):
     close_val_df = close_val_df[['ticker', 'concentration']]
     close_val_df = close_val_df.sort_values(by='concentration', ascending=False)
     return close_val_df
+
+
+def get_ticker_volatility(ticker, period):
+    yft = yf.Ticker(ticker)
+    px_hist = yft.history(period='max')
+    if not px_hist.empty:
+        vol_stats = volatility(px_hist, periods=period)
+        vol = vol_stats['Close']
+        return vol
+
+
+def get_position_size_and_vol_in_name(ticker, period, loss_threshold_pct, liquid_only=False):
+    close_val_df = get_close_value(liquid_only=liquid_only)
+    portfolio_val = close_val_df['CloseValue'].sum()
+    vol = get_ticker_volatility(ticker, period)
+    loss_threshold = loss_threshold_pct * portfolio_val
+    position_size = loss_threshold / vol
+    return position_size, vol
