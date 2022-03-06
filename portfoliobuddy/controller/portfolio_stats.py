@@ -6,25 +6,27 @@ from portfoliobuddy.configs import DEFAULT_CCY
 from functools import partial
 
 
-
-def get_trades(tickers=None, liquid_only=None):
+def get_trades(tickers=None, liquid_only=None, include_cash=True):
     db_session = session()
     query = db_session.query(Trade).join(Account)
     if tickers:
         query = query.filter(Trade.ticker.in_(tickers))
     if liquid_only is not None:
         query = query.filter(Account.is_liquid == bool(liquid_only))
+    if not include_cash:
+        query = query.filter(Trade.ticker != 'Cash')
     trades_df = pd.read_sql(query.statement, engine)
     return trades_df
 
 
 def can_sell_trades(tickers=None, liquid_only=None):
-    trades_df = get_trades(tickers=tickers, liquid_only=liquid_only)
+    trades_df = get_trades(tickers=tickers, liquid_only=liquid_only, include_cash=False)
     trades_df = trades_df[['tradedate', 'ticker', 'account']]
     trades_df['today'] = datetime.date.today()
     trades_df['trade_age'] = (trades_df['today'] - trades_df['tradedate'])
     trades_df['trade_age'] = trades_df['trade_age'].apply(lambda trade_age: trade_age.days)
     trades_df['can_sell'] = trades_df['trade_age'] > 30
+    trades_df['days_to_sell'] = trades_df['trade_age'].apply(lambda t_age: max(30 - t_age, 0))
     return trades_df
 
 
