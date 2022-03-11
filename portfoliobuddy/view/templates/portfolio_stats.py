@@ -10,3 +10,7 @@ CAN_SELL_TEMPLATE = '''
 {{ ', '.join(tickers) }} {% if can_sell_ %} can be sold {% else %} can be sold after {{ days_to_sell }} days {% endif %}
 {% endfor %}
 '''.strip()
+
+RETURNS_TEMPLATE = '''
+Returns using 
+'''.strip()

@@ -110,9 +110,13 @@ def get_close_value(tickers=None, liquid_only=None, in_default_ccy=True):
     return trades_df
 
 
-def asset_conc(tickers=None, liquid_only=None, in_default_ccy=True):
+def asset_conc(tickers=None, idea_mode=None, liquid_only=None, in_default_ccy=True):
     close_val_df = get_close_value(tickers, liquid_only, in_default_ccy)
-    close_val_df = close_val_df.groupby(['ticker']).agg({'CloseValue': ['sum']})
+    if idea_mode:
+        close_val_df = close_val_df.groupby(['idea']).agg({'CloseValue': ['sum']})
+        close_val_df = close_val_df.rename(columns={'idea': 'ticker'})
+    else:
+        close_val_df = close_val_df.groupby(['ticker']).agg({'CloseValue': ['sum']})
     close_val_df = close_val_df.reset_index()
     close_val_df.columns = ['ticker', 'CloseValue']
     close_val_df['TotalValue'] = close_val_df['CloseValue'].sum()
