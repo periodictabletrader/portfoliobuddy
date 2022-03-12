@@ -94,7 +94,7 @@ def convert_to_default_ccy(trades_df):
     return trades_df
 
 
-def get_close_value(tickers=None, liquid_only=None, in_default_ccy=True):
+def get_close_value(tickers=None, liquid_only=None, add_return_col=False, in_default_ccy=True):
     trades_df = get_trades(tickers, liquid_only=liquid_only)
     tickers = list(trades_df['ticker'].unique())
     non_cash_tickers = [ticker for ticker in tickers if ticker.lower() != 'cash']
@@ -107,6 +107,8 @@ def get_close_value(tickers=None, liquid_only=None, in_default_ccy=True):
     if in_default_ccy:
         trades_df = convert_to_default_ccy(trades_df)
     trades_df['CloseValue'] = trades_df['Close'] * trades_df['qty']
+    if add_return_col:
+        trades_df['ReturnPct'] = (trades_df['CloseValue'] - trades_df['buy_cost']) / trades_df['buy_cost']
     return trades_df
 
 

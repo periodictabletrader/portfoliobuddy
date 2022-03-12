@@ -12,5 +12,7 @@ CAN_SELL_TEMPLATE = '''
 '''.strip()
 
 RETURNS_TEMPLATE = '''
-Returns using 
+Portfolio Returns {% if liquid_only %}Liquid{% endif %}
+
+{{ returns_tbl }}
 '''.strip()

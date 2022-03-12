@@ -5,7 +5,8 @@ from telegram import MessageEntity
 
 from portfoliobuddy.controller.portfolio_stats import can_sell_trades, asset_conc, get_position_size_and_vol_in_name, \
     get_close_value
-from portfoliobuddy.view.templates.portfolio_stats import ASSET_CONCENTRATION_TEMPLATE, CAN_SELL_TEMPLATE
+from portfoliobuddy.view.templates.portfolio_stats import ASSET_CONCENTRATION_TEMPLATE, CAN_SELL_TEMPLATE, \
+    RETURNS_TEMPLATE
 from portfoliobuddy.view.utils import determine_code_entity_location, parse_pct_input
 
 
@@ -48,13 +49,16 @@ def __parse_conc_inputs(args):
         idea_mode, total_pf = [bool(arg) for arg in split_args]
     elif len(args) == 1:
         idea_mode = bool(split_args[0])
-    liquid_only = not total_pf
+    # liquid_only = False shows only illiquid positions hence setting to None
+    liquid_only = None if total_pf is True else True
     return idea_mode, liquid_only
 
 
 def _format_asset_concentration_output(conc_df, liquid_only=False):
     asset_conc_template = Template(ASSET_CONCENTRATION_TEMPLATE)
-    ticker_concentrations = tabulate([(row[1]['ticker'], f"{row[1]['concentration']:.1%}") for row in conc_df.iterrows()])
+    ticker_conc_list = [(row['ticker'], f"{row['concentration']:.1%}") for _, row in conc_df.iterrows()]
+    ticker_concentrations = tabulate(ticker_conc_list, headers=['Ticker', 'Concentration (%)'],
+                                     colalign=('left', 'right'))
     template_data = {'liquid_only': liquid_only, 'ticker_concentrations': ticker_concentrations}
     return asset_conc_template.render(template_data)
 # endregion conc
@@ -94,7 +98,7 @@ def size_position(update, context):
         position_size, vol = get_position_size_and_vol_in_name(ticker, period, loss_threshold_pct, liquid_only)
         stats_output = tabulate([['Ticker', ticker],
                                  ['Position Size', f'{position_size:,.2f}'],
-                                 [f'Vol over {period} days', f'{vol:.2%}']])
+                                 [f'Vol over {period} days', f'{vol:.2%}']], colalign=('left', 'right'))
         reply_txt = f'''
 Stats for a position in {ticker} that won't lose more than {loss_threshold_pct:.2%} of total portfolio value
 
@@ -108,16 +112,40 @@ Stats for a position in {ticker} that won't lose more than {loss_threshold_pct:.
 # endregion size
 
 
+# region returns
 def returns(update, context):
     incl_values, liquid_only = _parse_returns_inputs(context.args)
-    close_val_df = get_close_value(liquid_only=liquid_only)
+    close_val_df = get_close_value(liquid_only=liquid_only, add_return_col=True)
+    returns_reply = _format_returns_reply(close_val_df, incl_values)
+    code_start, code_length = determine_code_entity_location(returns_reply)
+    context.bot.send_message(chat_id=update.effective_chat.id, text=returns_reply,
+                             entities=[MessageEntity('code', code_start, code_length)])
+
+
+def _format_returns_reply(val_df, incl_values):
+    val_df = val_df.rename(columns={'ticker': 'Ticker', 'buy_cost': 'BuyCost'})
+    if incl_values:
+        val_df = val_df[['Ticker', 'BuyCost', 'CloseValue', 'ReturnPct']]
+        returns_list = [(row['Ticker'], f"{row['BuyCost']:,.0f}", f"{row['CloseValue']:,.0f}", f"{row['ReturnPct']:.1%}")
+                        for _, row in val_df.iterrows()]
+        col_align = ['left', 'right', 'right', 'right']
+    else:
+        val_df = val_df[['Ticker', 'ReturnPct']]
+        returns_list = [(row['Ticker'], f"{row['ReturnPct']:.1%}") for _, row in val_df.iterrows()]
+        col_align = ['left', 'right']
+    returns_tbl = tabulate(returns_list, headers=val_df.columns.values, colalign=col_align)
+    returns_reply = Template(RETURNS_TEMPLATE).render({'returns_tbl': returns_tbl})
+    return returns_reply
 
 
 def _parse_returns_inputs(args):
-    incl_values, liquid_only = None, None
+    incl_values, total_pf = None, None
     split_args = [arg.strip() for arg in ' '.join(args).split(',')]
     if len(split_args) == 2:
-        incl_values, liquid_only = [bool(arg) for arg in split_args]
+        incl_values, total_pf = [bool(arg) for arg in split_args]
     elif len(split_args) == 1:
         incl_values = bool(split_args[0])
+    # liquid_only = False shows only illiquid positions hence setting to None
+    liquid_only = None if total_pf is True else True
     return incl_values, liquid_only
+# endregion returns
