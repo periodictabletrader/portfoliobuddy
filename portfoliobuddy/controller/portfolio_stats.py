@@ -113,6 +113,8 @@ def get_close_value(tickers=None, liquid_only=None, incl_return_col=False, aggre
             'qty': ['sum'],
             'CloseValue': ['sum'],
         })
+        trades_df = trades_df.reset_index()
+        trades_df.columns = ['ticker', 'idea', 'Close', 'buy_cost', 'qty', 'CloseValue']
     if incl_return_col:
         trades_df['ReturnPct'] = (trades_df['CloseValue'] - trades_df['buy_cost']) / trades_df['buy_cost']
     return trades_df
