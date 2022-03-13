@@ -115,7 +115,7 @@ Stats for a position in {ticker} that won't lose more than {loss_threshold_pct:.
 # region returns
 def returns(update, context):
     incl_values, liquid_only = _parse_returns_inputs(context.args)
-    close_val_df = get_close_value(liquid_only=liquid_only, add_return_col=True)
+    close_val_df = get_close_value(liquid_only=liquid_only, incl_return_col=True, aggregate=True)
     returns_reply = _format_returns_reply(close_val_df, incl_values)
     code_start, code_length = determine_code_entity_location(returns_reply)
     context.bot.send_message(chat_id=update.effective_chat.id, text=returns_reply,
