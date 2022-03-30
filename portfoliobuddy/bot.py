@@ -23,8 +23,9 @@ def register_commands(dispatcher):
     size = CommandHandler('size', size_position)
     dispatcher.add_handler(size)
     returns_handler = CommandHandler('returns', returns)
-    val_handler = CommandHandler('val', val)
     dispatcher.add_handler(returns_handler)
+    val_handler = CommandHandler('val', val)
+    dispatcher.add_handler(val_handler)
     return dispatcher
 
 
