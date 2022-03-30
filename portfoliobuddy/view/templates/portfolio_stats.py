@@ -16,3 +16,10 @@ Portfolio Returns {% if liquid_only %}Liquid{% endif %}
 
 {{ returns_tbl }}
 '''.strip()
+
+VAL_TEMPLATE = '''
+Portfolio Value {% if liquid_only %}Liquid{% endif %} {% if not idea_mode %} {{ close_value }}
+{% else %}
+{{ val_tbl }}
+{% endif %}
+'''

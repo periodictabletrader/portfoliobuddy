@@ -6,7 +6,7 @@ from telegram import MessageEntity
 from portfoliobuddy.controller.portfolio_stats import can_sell_trades, asset_conc, get_position_size_and_vol_in_name, \
     get_close_value
 from portfoliobuddy.view.templates.portfolio_stats import ASSET_CONCENTRATION_TEMPLATE, CAN_SELL_TEMPLATE, \
-    RETURNS_TEMPLATE
+    RETURNS_TEMPLATE, VAL_TEMPLATE
 from portfoliobuddy.view.utils import determine_code_entity_location, parse_pct_input
 
 
@@ -149,3 +149,46 @@ def _parse_returns_inputs(args):
     liquid_only = None if total_pf is True else True
     return incl_values, liquid_only
 # endregion returns
+
+
+# region val
+def val(update, context):
+    liquid_only, idea_mode = _parse_val_inputs(context.args)
+    close_val_df = get_close_value(liquid_only=liquid_only)
+    if idea_mode:
+        close_val_df = close_val_df.groupby(['idea']).agg({'CloseValue': ['sum']})
+        close_val_df = close_val_df.reset_index()
+    close_val = close_val_df['CloseValue'].sum()
+    val_df = close_val_df if idea_mode else None
+    reply_txt = _format_val_reply(close_val, val_df, idea_mode)
+    code_start, code_length = determine_code_entity_location(reply_txt)
+    no_code_block = (code_start, code_length) == (None, None)
+    msg_entity = None if no_code_block else MessageEntity('code', code_start, code_length)
+    msg_entities = [msg_entity] if msg_entity else None
+    context.bot.send_message(chat_id=update.effective_chat.id, text=reply_txt, entities=msg_entities)
+
+
+def _format_val_reply(close_value, val_df, idea_mode=False):
+    if idea_mode:
+        val_list = [[row['idea'], row['val']] for _, row in val_df.iterrows()]
+        col_align = ['left', 'right']
+        val_tbl = tabulate(val_list, headers=val_df.columns.values, colalign=col_align)
+    else:
+        val_tbl = None
+    val_reply = Template(VAL_TEMPLATE).render({'close_value': close_value, 'val_tbl': val_tbl,
+                                               'idea_mode': idea_mode}).strip()
+    return val_reply
+
+
+def _parse_val_inputs(args):
+    total_pf, idea_mode = None, None
+    split_args = [arg.strip() for arg in ' '.join(args).split(',')]
+    if len(split_args) == 2:
+        total_pf, idea_mode = [bool(arg) for arg in split_args]
+    elif len(split_args) == 1:
+        total_pf = bool(split_args[0])
+    liquid_only = None if total_pf is True else True
+    return liquid_only, idea_mode
+
+
+# endregion val
