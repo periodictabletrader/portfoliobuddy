@@ -1,3 +1,6 @@
+# from constants import BOT_CODE_PATH
+# import sys
+# sys.path.append(BOT_CODE_PATH)
 from telegram.ext import CommandHandler, Updater
 
 from portfoliobuddy.controller.user import user_exists
