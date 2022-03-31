@@ -170,7 +170,7 @@ def val(update, context):
 
 def _format_val_reply(close_value, val_df, idea_mode=False):
     if idea_mode:
-        val_list = [[row['idea'], row['val']] for _, row in val_df.iterrows()]
+        val_list = [[row['idea'], row['CloseValue']] for _, row in val_df.iterrows()]
         col_align = ['left', 'right']
         val_tbl = tabulate(val_list, headers=val_df.columns.values, colalign=col_align)
     else:
