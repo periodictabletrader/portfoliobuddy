@@ -158,6 +158,7 @@ def val(update, context):
     if idea_mode:
         close_val_df = close_val_df.groupby(['idea']).agg({'CloseValue': ['sum']})
         close_val_df = close_val_df.reset_index()
+        close_val_df.columns = ['idea', 'CloseValue']
     close_val = close_val_df['CloseValue'].sum()
     val_df = close_val_df if idea_mode else None
     reply_txt = _format_val_reply(close_val, val_df, idea_mode)
@@ -170,7 +171,7 @@ def val(update, context):
 
 def _format_val_reply(close_value, val_df, idea_mode=False):
     if idea_mode:
-        val_list = [[row['idea'], row['CloseValue']] for _, row in val_df.iterrows()]
+        val_list = [[row['idea'], f'{row["CloseValue"]:,.2f}'] for _, row in val_df.iterrows()]
         col_align = ['left', 'right']
         val_tbl = tabulate(val_list, headers=val_df.columns.values, colalign=col_align)
     else:
