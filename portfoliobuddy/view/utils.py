@@ -1,7 +1,10 @@
 
 def determine_code_entity_location(asset_conc_str):
     code_start = asset_conc_str.find('\n')
-    code_length = len(asset_conc_str[code_start:])
+    if code_start != -1:
+        code_length = len(asset_conc_str[code_start:])
+    else:
+        code_start, code_length = None, None
     return code_start, code_length
 
 

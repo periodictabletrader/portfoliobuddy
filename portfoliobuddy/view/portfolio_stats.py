@@ -175,7 +175,7 @@ def _format_val_reply(close_value, val_df, idea_mode=False):
         val_tbl = tabulate(val_list, headers=val_df.columns.values, colalign=col_align)
     else:
         val_tbl = None
-    val_reply = Template(VAL_TEMPLATE).render({'close_value': close_value, 'val_tbl': val_tbl,
+    val_reply = Template(VAL_TEMPLATE).render({'close_value': f'{close_value:,.2f}', 'val_tbl': val_tbl,
                                                'idea_mode': idea_mode}).strip()
     return val_reply
 
