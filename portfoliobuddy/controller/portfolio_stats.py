@@ -5,6 +5,9 @@ import yfinance as yf
 from portfoliobuddy.configs import DEFAULT_CCY
 from functools import partial
 from quantstats.stats import volatility
+import pandas_datareader.data as web
+from portfoliobuddy.credentials import ALPHA_VANTAGE_TOKEN
+from portfoliobuddy.controller import wrap_list
 
 
 def get_trades(tickers=None, liquid_only=None, include_cash=True):
@@ -38,7 +41,7 @@ def get_px_overrides(tickers):
     return px_override_df
 
 
-def get_last_close(tickers):
+def get_last_close_yf(tickers):
     if len(tickers) == 1:
         yfticker = yf.Ticker(tickers[0])
         px_hist = yfticker.history(period='1d')
@@ -61,6 +64,43 @@ def get_last_close(tickers):
         px_hist = pd.concat([px_hist, px_override_df])
     px_hist.loc[len(px_hist)] = ['Cash', 1]
     return px_hist
+
+
+def get_last_close_av(tickers):
+    px_hist = pd.DataFrame()
+    for ticker in tickers:
+        ticker_px = web.DataReader(ticker, 'av-daily', api_key=ALPHA_VANTAGE_TOKEN)
+        ticker_px = ticker_px.reset_index()
+        ticker_px = ticker_px.rename(columns={'close': 'Close'})
+        ticker_px['ticker'] = ticker
+        ticker_px = ticker_px[['ticker', 'Close']]
+        if px_hist.empty:
+            px_hist = ticker_px
+        else:
+            px_hist = pd.concat([px_hist, ticker_px])
+    tickers_without_px = list(px_hist[px_hist['Close'].isna()]['ticker'].unique())
+    if tickers_without_px:
+        px_override_df = get_px_overrides(tickers_without_px)
+        px_override_df = px_override_df.rename(columns={'px': 'Close'})
+        px_override_df = px_override_df[['ticker', 'Close']]
+        px_hist = px_hist[~px_hist['Close'].isna()]
+        px_hist = pd.concat([px_hist, px_override_df])
+    px_hist.loc[len(px_hist)] = ['Cash', 1]
+    return px_hist
+
+
+def strip_outlier_px(px_hist, price_col=None, zscore_threshold=10):
+    outlier_cols = wrap_list(price_col) if price_col is not None else px_hist.columns
+    # compute Z Score on all relevant price columns
+    for col in outlier_cols:
+        px_hist[f'{col}_zscore'] = abs((px_hist[col] - px_hist[col].mean()) / px_hist[col].std())
+
+    # filter outlier values out using zscore_threshold
+    for col in outlier_cols:
+        px_hist = px_hist[px_hist[f'{col}_zscore'] < zscore_threshold]
+
+    cols_to_include = [col for col in px_hist.columns if '_zscore' not in col]
+    return px_hist[cols_to_include]
 
 
 def convert_close_px(row, fx_rate_map):
@@ -98,7 +138,7 @@ def get_close_value(tickers=None, liquid_only=None, incl_return_col=False, aggre
     trades_df = get_trades(tickers, liquid_only=liquid_only)
     tickers = list(trades_df['ticker'].unique())
     non_cash_tickers = [ticker for ticker in tickers if ticker.lower() != 'cash']
-    last_close = get_last_close(non_cash_tickers)
+    last_close = get_last_close_yf(non_cash_tickers)
     trades_df = pd.merge(trades_df, last_close, how='left', on='ticker')
     # Scale GBp prices to GBP by dividing by 100
     gbp_pence_positions = trades_df['ccy'] == 'GBp'
@@ -140,7 +180,8 @@ def get_ticker_volatility(ticker, period):
     yft = yf.Ticker(ticker)
     px_hist = yft.history(period='max')
     if not px_hist.empty:
-        vol_stats = volatility(px_hist, periods=period)
+        px_hist_clean = strip_outlier_px(px_hist, 'Close')
+        vol_stats = volatility(px_hist_clean, periods=period)
         vol = vol_stats['Close']
         return vol
 

@@ -21,3 +21,13 @@ def get_trade_strs():
     results = db_session.query(Trade)
     formatted_trades = [_format_trade_for_keyboard(result, accounts) for result in results]
     return formatted_trades
+
+
+def wrap_list(val):
+    if isinstance(val, list):
+        pass
+    elif val is not None:
+        val = [val]
+    else:
+        val = []
+    return val
