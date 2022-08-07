@@ -5,3 +5,4 @@ yfinance
 QuantStats
 jinja2
 tabulate
+pandas_datareader
