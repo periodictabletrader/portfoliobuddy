@@ -53,7 +53,7 @@ def prep_portfolio():
 def upload_portfolio():
     portfolio = prep_portfolio()
     conn = sqlite3.connect(DB_NAME)
-    portfolio.to_sql('positions', conn, if_exists='append', index=False)
+    portfolio.to_sql('positions', conn, if_exists='replace', index=False)
     conn.close()
 
 
