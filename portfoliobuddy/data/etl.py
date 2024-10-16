@@ -3,6 +3,8 @@ import datetime
 import yfinance as yf
 from pandas.tseries.offsets import BDay
 import sqlite3
+# import sys
+# sys.path.append('/home/pi/Bots/portfoliobuddy/')
 from portfoliobuddy.constants import DB_NAME, PF_SHEET
 
 
@@ -42,8 +44,9 @@ def prep_portfolio():
     yf_tickers = yf.Tickers(tickers)
     px = yf_tickers.history('5d')['Close']
     px = px.loc[eod.strftime('%Y-%m-%d')]
-    ticker_px = px.transpose().reset_index().rename(columns={eod: 'px'})
-    prepped_pf = pd.merge(prepped_pf, ticker_px, left_on='ticker', right_on='Ticker', how='left')
+    ticker_px = px.transpose().reset_index()
+    ticker_px.columns = ['ticker', 'px']
+    prepped_pf = pd.merge(prepped_pf, ticker_px, left_on='ticker', right_on='ticker', how='left')
     prepped_pf['mtmval'] = prepped_pf['qty'] * prepped_pf['px']
     prepped_pf.loc[prepped_pf['mtmval'].isna(), 'mtmval'] = prepped_pf['mtmval_fallback']
     prepped_pf = prepped_pf[['posdate', 'ticker', 'horizon', 'idea', 'account', 'qty', 'buyval', 'mtmval']]
