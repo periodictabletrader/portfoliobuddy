@@ -22,10 +22,10 @@ def read_portfolio():
     return portfolio
 
 
-def prep_portfolio():
+def prep_portfolio(run_date=None):
     pf = read_portfolio()
-    today = datetime.date.today()
-    eod = datetime.datetime(today.year, today.month, today.day) - BDay(1)
+    run_date = run_date or datetime.date.today()
+    eod = datetime.datetime(run_date.year, run_date.month, run_date.day) - BDay(1)
     prepped_pf = pf[['Yfinance Ticker', 'Time Horizon', 'Idea', 'Account', 'Qty', 'Value at Buy (GBP)', 'Value Today (GBP)']]
     prepped_pf = prepped_pf.rename(columns={
         'Yfinance Ticker': 'ticker',
@@ -50,10 +50,10 @@ def prep_portfolio():
     return prepped_pf
 
 
-def upload_portfolio():
-    portfolio = prep_portfolio()
+def upload_portfolio(run_date=None):
+    portfolio = prep_portfolio(run_date)
     conn = sqlite3.connect(DB_NAME)
-    portfolio.to_sql('positions', conn, if_exists='replace', index=False)
+    portfolio.to_sql('positions', conn, if_exists='append', index=False)
     conn.close()
 
 
