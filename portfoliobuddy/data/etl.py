@@ -26,7 +26,7 @@ def prep_portfolio(run_date=None):
     pf = read_portfolio()
     run_date = run_date or datetime.date.today()
     eod = datetime.datetime(run_date.year, run_date.month, run_date.day) - BDay(1)
-    prepped_pf = pf[['Yfinance Ticker', 'Time Horizon', 'Idea', 'Account', 'Qty', 'Value at Buy (GBP)', 'Value Today (GBP)']]
+    prepped_pf = pf[['Yfinance Ticker', 'Time Horizon', 'Idea', 'Account', 'Qty', 'FX', 'Value at Buy (GBP)', 'Value Today (GBP)']]
     prepped_pf = prepped_pf.rename(columns={
         'Yfinance Ticker': 'ticker',
         'Time Horizon': 'horizon',
@@ -42,9 +42,10 @@ def prep_portfolio(run_date=None):
     yf_tickers = yf.Tickers(tickers)
     px = yf_tickers.history('5d')['Close']
     px = px.loc[eod.strftime('%Y-%m-%d')]
-    ticker_px = px.transpose().reset_index().rename(columns={eod: 'px'})
-    prepped_pf = pd.merge(prepped_pf, ticker_px, left_on='ticker', right_on='Ticker', how='left')
-    prepped_pf['mtmval'] = prepped_pf['qty'] * prepped_pf['px']
+    ticker_px = px.transpose().reset_index()
+    ticker_px.columns = ['ticker', 'px']
+    prepped_pf = pd.merge(prepped_pf, ticker_px, left_on='ticker', right_on='ticker', how='left')
+    prepped_pf['mtmval'] = prepped_pf['qty'] * prepped_pf['px'] * prepped_pf['FX']
     prepped_pf.loc[prepped_pf['mtmval'].isna(), 'mtmval'] = prepped_pf['mtmval_fallback']
     prepped_pf = prepped_pf[['posdate', 'ticker', 'horizon', 'idea', 'account', 'qty', 'buyval', 'mtmval']]
     return prepped_pf
